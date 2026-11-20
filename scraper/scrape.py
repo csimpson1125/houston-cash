@@ -34,8 +34,8 @@ BASE = "https://www.pokeratlas.com"
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 CENTRAL = ZoneInfo("America/Chicago")
-UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-      "Chrome/126.0 Safari/537.36 HoustonCashTracker/1.0")
+UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
+      "Chrome/131.0.0.0 Safari/537.36")
 
 # Used only if PokerAtlas's room list can't be read and no saved list exists yet.
 # (Houston-area rooms PokerAtlas listed in November 2026.)
@@ -218,7 +218,8 @@ def parse_live_games(html):
 
 def new_session():
     s = requests.Session()
-    s.headers.update({"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9"})
+    s.headers.update({"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9",
+                      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"})
     return s
 
 
@@ -390,8 +391,16 @@ def main():
         login(s, user, pw)
     except ReadError as e:
         fail(str(e))
+    except requests.HTTPError as e:
+        r = e.response
+        blocked = r is not None and (r.status_code in (403, 429, 503) or "cf-mitigated" in r.headers)
+        detail = f"HTTP {r.status_code} from {r.url}" if r is not None else str(e)
+        print("Sign-in response:", detail, "| server:", r.headers.get("server") if r is not None else "",
+              "| body starts:", (r.text[:300].replace("\n", " ") if r is not None else ""))
+        fail(("PokerAtlas is blocking requests from GitHub's servers (" + detail + ").") if blocked
+             else f"PokerAtlas sign-in failed ({detail}).")
     except Exception as e:
-        fail(f"Couldn't reach PokerAtlas to sign in ({e.__class__.__name__}).")
+        fail(f"Couldn't reach PokerAtlas to sign in ({e.__class__.__name__}: {e}).")
 
     rooms, note = get_rooms(s, cfg)
     highlight_slug = cfg.get("highlight_room", "champions-club-houston")
