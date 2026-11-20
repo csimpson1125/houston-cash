@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Houston Cash Games</title>
+<meta name="description" content="Live cash games running at every Houston-area poker room, with busiest-times history.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f5f2;
+  --surface-1: #fcfcfb;
+  --surface-2: #f0efec;
+  --border: #e2e0da;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77756f;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --grid: #e8e6e1;
+  --critical: #d03b3b;
+  --warning-bg: #fff4dc;
+  --warning-ink: #7a5200;
+  --good: #0ca30c;
+  --hl-row: #fff3ec;
+  --seq-0: #cde2fb; --seq-1: #9ec5f4; --seq-2: #6da7ec; --seq-3: #3987e5;
+  --seq-4: #256abf; --seq-5: #184f95; --seq-6: #0d366b;
+  --empty-cell: #ecebe7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface-1: #1a1a19; --surface-2: #232321; --border: #33332f;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #96958c;
+    --series-1: #3987e5; --series-2: #d95926; --grid: #2c2c29;
+    --warning-bg: #3a2e12; --warning-ink: #f5d48a; --hl-row: #2e221b;
+    --seq-0: #104281; --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #2a78d6;
+    --seq-4: #5598e7; --seq-5: #86b6ef; --seq-6: #cde2fb;
+    --empty-cell: #232321;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface-1: #1a1a19; --surface-2: #232321; --border: #33332f;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #96958c;
+  --series-1: #3987e5; --series-2: #d95926; --grid: #2c2c29;
+  --warning-bg: #3a2e12; --warning-ink: #f5d48a; --hl-row: #2e221b;
+  --seq-0: #104281; --seq-1: #184f95; --seq-2: #1c5cab; --seq-3: #2a78d6;
+  --seq-4: #5598e7; --seq-5: #86b6ef; --seq-6: #cde2fb;
+  --empty-cell: #232321;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text-primary);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 16px; }
+h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 17px; margin: 0 0 4px; }
+.sub { color: var(--text-secondary); font-size: 13px; }
+.status { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--good); display: inline-block; }
+.dot.stale { background: #fab219; } .dot.bad { background: var(--critical); }
+.banner { background: var(--warning-bg); color: var(--warning-ink); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 14px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+.card .desc { color: var(--text-secondary); font-size: 13px; margin: 0 0 12px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.tile .k { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+.tile .v { font-size: 30px; font-weight: 650; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile .n { font-size: 12px; color: var(--text-muted); }
+@media (max-width: 720px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile .v { font-size: 24px; } }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.grid { border-collapse: collapse; width: 100%; min-width: 760px; font-variant-numeric: tabular-nums; }
+.grid th, .grid td { padding: 7px 8px; border-bottom: 1px solid var(--grid); text-align: center; font-size: 14px; }
+.grid th { font-size: 12px; color: var(--text-secondary); font-weight: 600; vertical-align: bottom; }
+.grid th:first-child, .grid td:first-child { text-align: left; }
+.grid td:first-child { white-space: nowrap; }
+.grid tr.room { cursor: pointer; }
+.grid tr.room:hover td { background: var(--surface-2); }
+.grid tr.hl td { background: var(--hl-row); }
+.grid tr.hl td:first-child { font-weight: 650; }
+.grid tr.zero td { color: var(--text-muted); }
+.grid .area { color: var(--text-muted); font-size: 12px; margin-left: 6px; }
+.grid .t { font-weight: 650; }
+.grid .w { color: var(--text-muted); font-size: 12px; margin-left: 3px; }
+.grid td.total { border-left: 1px solid var(--grid); }
+.grid tr.sum td { font-weight: 650; border-top: 2px solid var(--border); }
+.grid tr.detail td { background: var(--surface-2); text-align: left; font-size: 13px; color: var(--text-secondary); }
+.grid tr.detail ul { margin: 2px 0; padding-left: 18px; columns: 2; }
+.grid tr.detail .x { color: var(--text-muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--text-secondary); margin-top: 10px; align-items: center; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .row2 { grid-template-columns: 1fr; } }
+select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary); }
+.controls { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.heat { display: grid; grid-template-columns: 40px repeat(24, minmax(0, 1fr)); gap: 2px; min-width: 560px; }
+.heat .lab { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; }
+.heat .hr { font-size: 10px; color: var(--text-muted); text-align: center; }
+.heat .c { height: 26px; border-radius: 3px; background: var(--empty-cell); }
+.heat .c:hover { outline: 2px solid var(--text-primary); outline-offset: -1px; }
+.ramp { display: inline-flex; gap: 2px; vertical-align: middle; }
+.ramp span { width: 18px; height: 10px; border-radius: 2px; }
+.empty { color: var(--text-muted); font-size: 14px; padding: 18px 0; text-align: center; }
+svg text { fill: var(--text-muted); font-size: 11px; }
+#tip { position: fixed; pointer-events: none; background: var(--text-primary); color: var(--surface-1); font-size: 12px; padding: 6px 9px; border-radius: 7px; z-index: 10; display: none; max-width: 240px; line-height: 1.35; }
+a { color: var(--series-1); }
+.downloads a { display: inline-block; margin: 2px 14px 2px 0; }
+footer { color: var(--text-muted); font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Houston Cash Games</h1>
+      <div class="sub">Every Houston-area room on PokerAtlas, read every 15 minutes, around the clock</div>
+    </div>
+    <div class="status"><span class="dot" id="dot"></span><span id="updated">Loading…</span></div>
+  </header>
+  <div id="banner"></div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section class="card">
+    <h2>Running right now</h2>
+    <p class="desc">Tables running in each game, with the wait list in small type (e.g. <b>3</b><span class="sub"> +7</span> = 3 tables, 7 waiting). Wait lists only count for games with a table going. Private games, tournaments, promos and set-day games are left out. Tap a room to see its games exactly as listed. Rooms marked "no live data" don't post live games to PokerAtlas; "not updating" means the room hasn't updated PokerAtlas in over 6 hours, so it isn't counted.</p>
+    <div class="scroll"><table class="grid" id="grid"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Busiest times</h2>
+    <p class="desc">Average tables running by day and hour. This gets more accurate the longer it runs: useful after about a week, solid after a month.</p>
+    <div class="controls"><label for="heatRoom" class="sub">Room</label><select id="heatRoom"></select></div>
+    <div class="scroll"><div class="heat" id="heat"></div></div>
+    <div class="legend" id="heatLegend"></div>
+  </section>
+
+  <div class="row2">
+    <section class="card">
+      <h2 id="shareTitle">Champions Club share of Houston tables</h2>
+      <p class="desc">Out of all the tables running in Houston, the share at your room, averaged per day.</p>
+      <div id="share"></div>
+    </section>
+    <section class="card">
+      <h2>Last 7 days: average tables running</h2>
+      <p class="desc">Each room's average across every reading this week.</p>
+      <div id="rank"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Download the data</h2>
+    <p class="desc">Spreadsheets (CSV) you can open in Excel or Google Sheets. "Every game" lists each game seen running or with a wait list at every reading. "Room totals" has each room's tables and wait list at every reading.</p>
+    <div class="downloads" id="downloads"></div>
+  </section>
+
+  <footer>Data comes from PokerAtlas, which the rooms update themselves, so a single reading can be off (especially overnight). Trends over weeks are reliable.</footer>
+</div>
+<div id="tip"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const hourLabel = (h) => (h % 12 || 12) + (h < 12 ? "a" : "p");
+const tip = $("tip");
+function showTip(e, html) {
+  tip.innerHTML = html; tip.style.display = "block";
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  const y = e.clientY + 16 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 10 : e.clientY + 16;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => (tip.style.display = "none");
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+let latest = null, summary = null, openRooms = new Set();
+
+async function load() {
+  const bust = "?t=" + Date.now();
+  try {
+    const [a, b] = await Promise.all([
+      fetch("data/latest.json" + bust).then((r) => (r.ok ? r.json() : null)),
+      fetch("data/summary.json" + bust).then((r) => (r.ok ? r.json() : null)),
+    ]);
+    latest = a; summary = b;
+  } catch (e) { /* keep last */ }
+  render();
+}
+
+function render() {
+  renderStatus(); renderTiles(); renderGrid(); renderHeatControls(); renderHeat(); renderShare(); renderRank(); renderDownloads();
+}
+
+function renderStatus() {
+  const dot = $("dot"), banner = $("banner");
+  banner.innerHTML = "";
+  if (!latest || !latest.rooms || !latest.rooms.length) {
+    dot.className = "dot stale";
+    $("updated").textContent = latest && latest.error ? "No reading yet" : "Waiting for the first reading";
+    if (latest && latest.error) banner.innerHTML = `<div class="banner">The reader couldn't get data yet: ${esc(latest.error)}</div>`;
+    return;
+  }
+  const ageMin = (Date.now() - new Date(latest.checked_utc).getTime()) / 60000;
+  dot.className = "dot" + (!latest.ok ? " bad" : ageMin > 45 ? " stale" : "");
+  $("updated").textContent = "Updated " + latest.checked_local + (ageMin > 45 ? ` (${Math.round(ageMin / 60 * 10) / 10}h ago)` : "");
+  if (!latest.ok) {
+    banner.innerHTML = `<div class="banner"><b>The last update failed</b> (${esc(latest.last_attempt_local)}): ${esc(latest.error)} Showing the reading from ${esc(latest.checked_local)}.</div>`;
+  } else if (ageMin > 45) {
+    banner.innerHTML = `<div class="banner">No new reading for a while. GitHub sometimes runs late; if this lasts more than a few hours, check the Actions tab on GitHub.</div>`;
+  }
+}
+
+function renderTiles() {
+  const el = $("tiles");
+  if (!latest || !latest.rooms || !latest.rooms.length) { el.innerHTML = ""; return; }
+  const R = latest.rooms;
+  const tables = R.reduce((s, r) => s + r.tables, 0);
+  const waiting = R.reduce((s, r) => s + r.waiting, 0);
+  const active = R.filter((r) => r.tables > 0).length;
+  const hl = R.find((r) => r.highlight);
+  const share = hl && tables ? Math.round((100 * hl.tables) / tables) + "%" : "–";
+  el.innerHTML = [
+    ["Tables running", tables, "across Houston"],
+    ["Players waiting", waiting, "on running games"],
+    ["Rooms with games", `${active}<span class="sub" style="font-size:16px"> / ${R.length}</span>`, `${R.filter((r) => r.status === "ok").length} rooms post live games`],
+    [(hl ? hl.name : "Your room") + " share", share, hl ? `${hl.tables} of ${tables} tables` : ""],
+  ].map(([k, v, n]) => `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${v}</div><div class="n">${esc(n)}</div></div>`).join("");
+}
+
+function renderGrid() {
+  const el = $("grid");
+  if (!latest || !latest.rooms || !latest.rooms.length) { el.innerHTML = `<tr><td class="empty">No reading yet.</td></tr>`; return; }
+  const cols = latest.columns;
+  const rooms = [...latest.rooms].sort((a, b) => (b.highlight - a.highlight) || (b.tables - a.tables) || (b.waiting - a.waiting) || a.name.localeCompare(b.name));
+  const sums = cols.map(() => ({ t: 0, w: 0 }));
+  let html = `<tr><th>Room</th>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}<th>Total</th></tr>`;
+  for (const r of rooms) {
+    const cells = cols.map(() => ({ t: 0, w: 0, names: [] }));
+    for (const g of r.games) if (g.counted) { const c = cells[g.col]; c.t += g.tables; c.w += g.waiting; c.names.push(g.game); }
+    cells.forEach((c, i) => { sums[i].t += c.t; sums[i].w += c.w; });
+    const cls = ["room", r.highlight ? "hl" : "", r.tables === 0 ? "zero" : ""].join(" ");
+    html += `<tr class="${cls}" data-slug="${esc(r.slug)}"><td>${esc(r.name)}<span class="area">${esc(r.area)}${r.stale ? " · not updating" : /live games/.test(r.status) ? " · no live data" : r.status !== "ok" ? " · " + esc(r.status) : ""}</span></td>` +
+      cells.map((c) => `<td title="${esc(c.names.join(", "))}">${c.t ? `<span class="t">${c.t}</span>${c.w ? `<span class="w">+${c.w}</span>` : ""}` : `<span class="sub">–</span>`}</td>`).join("") +
+      `<td class="total">${r.tables ? `<span class="t">${r.tables}</span>${r.waiting ? `<span class="w">+${r.waiting}</span>` : ""}` : `<span class="sub">–</span>`}</td></tr>`;
+    if (openRooms.has(r.slug)) {
+      const list = r.games.length
+        ? `<ul>${r.games.map((g) => `<li>${esc(g.game)}: ${g.tables} table${g.tables === 1 ? "" : "s"}, ${g.waiting} waiting${g.counted ? "" : ' <span class="x">(not counted)</span>'}</li>`).join("")}</ul>`
+        : "No games listed right now.";
+      const note = (r.pa_updated ? `Room last updated PokerAtlas ${esc(r.pa_updated)}.` : "") + (r.status !== "ok" ? ` <b>${esc(r.status)}</b>` : "");
+      html += `<tr class="detail"><td colspan="${cols.length + 2}">${list}${note ? `<div class="x">${note}</div>` : ""}</td></tr>`;
+    }
+  }
+  const tt = rooms.reduce((s, r) => s + r.tables, 0), tw = rooms.reduce((s, r) => s + r.waiting, 0);
+  html += `<tr class="sum"><td>All Houston</td>${sums.map((s) => `<td>${s.t ? `${s.t}${s.w ? `<span class="w">+${s.w}</span>` : ""}` : "–"}</td>`).join("")}<td class="total">${tt}${tw ? `<span class="w">+${tw}</span>` : ""}</td></tr>`;
+  el.innerHTML = html;
+  el.querySelectorAll("tr.room").forEach((tr) => tr.addEventListener("click", () => {
+    const s = tr.dataset.slug; openRooms.has(s) ? openRooms.delete(s) : openRooms.add(s); renderGrid();
+  }));
+}
+
+function renderHeatControls() {
+  const sel = $("heatRoom");
+  if (!summary || !summary.heat) { sel.innerHTML = `<option>All Houston</option>`; return; }
+  const keep = sel.value;
+  const names = Object.keys(summary.heat).filter((n) => n !== "All Houston").sort();
+  const hl = summary.highlight;
+  const ordered = ["All Houston", ...(names.includes(hl) ? [hl] : []), ...names.filter((n) => n !== hl)];
+  sel.innerHTML = ordered.map((n) => `<option>${esc(n)}</option>`).join("");
+  if (keep && ordered.includes(keep)) sel.value = keep;
+}
+$("heatRoom").addEventListener("change", renderHeat);
+
+function renderHeat() {
+  const el = $("heat"), leg = $("heatLegend");
+  const room = $("heatRoom").value || "All Houston";
+  const grid = summary && summary.heat && summary.heat[room];
+  if (!grid) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">The chart fills in as readings come in.</div>`; leg.innerHTML = ""; return; }
+  const vals = grid.flat().filter((v) => v != null);
+  const max = Math.max(1, ...vals);
+  const steps = 7;
+  const color = (v) => (v == null ? "var(--empty-cell)" : v === 0 ? "var(--surface-2)" : `var(--seq-${Math.min(steps - 1, Math.floor((v / max) * steps * 0.999))})`);
+  let html = `<div></div>` + Array.from({ length: 24 }, (_, h) => `<div class="hr">${h % 3 === 0 ? hourLabel(h) : ""}</div>`).join("");
+  grid.forEach((row, d) => {
+    html += `<div class="lab">${DAYS[d]}</div>` + row.map((v, h) => `<div class="c" style="background:${color(v)}" data-d="${d}" data-h="${h}" data-v="${v ?? ""}"></div>`).join("");
+  });
+  el.innerHTML = html;
+  el.querySelectorAll(".c").forEach((c) => {
+    const f = (e) => {
+      const v = c.dataset.v;
+      showTip(e, `<b>${DAYS[c.dataset.d]} ${hourLabel(+c.dataset.h)}m–${hourLabel((+c.dataset.h + 1) % 24)}m</b><br>${v === "" ? "No readings yet" : `${v} tables on average`}`);
+    };
+    c.addEventListener("mousemove", f); c.addEventListener("click", f); c.addEventListener("mouseleave", hideTip);
+  });
+  leg.innerHTML = `<span>Fewer</span><span class="ramp">${Array.from({ length: steps }, (_, i) => `<span style="background:var(--seq-${i})"></span>`).join("")}</span><span>More (busiest hour ≈ ${Math.round(max * 10) / 10} tables)</span>` +
+    `<span><span class="sw" style="background:var(--empty-cell)"></span>No readings yet</span>` +
+    (summary.first_reading_local ? `<span>Readings since ${esc(summary.first_reading_local)} (${summary.readings.toLocaleString()} so far)</span>` : "");
+}
+
+function renderShare() {
+  const el = $("share");
+  const hl = summary && summary.highlight;
+  if (hl) $("shareTitle").textContent = `${hl} share of Houston tables`;
+  const data = summary && summary.daily ? summary.daily.filter((d) => d.share != null) : [];
+  if (data.length < 2) { el.innerHTML = `<div class="empty">Needs at least two days of readings.</div>`; return; }
+  const W = 520, H = 220, m = { l: 36, r: 12, t: 12, b: 26 };
+  const maxY = Math.max(10, Math.ceil((Math.max(...data.map((d) => d.share)) * 1.15) / 5) * 5);
+  const x = (i) => m.l + (i * (W - m.l - m.r)) / (data.length - 1);
+  const y = (v) => H - m.b - (v / maxY) * (H - m.t - m.b);
+  const ticks = [0, maxY / 2, maxY];
+  const fmtDate = (s) => new Date(s + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const every = Math.max(1, Math.ceil(data.length / 6));
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily share line chart">`;
+  svg += ticks.map((t) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${m.l - 6}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`).join("");
+  svg += data.map((d, i) => ((i % every === 0 && data.length - 1 - i >= every / 2) || i === data.length - 1 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${fmtDate(d.date)}</text>` : "")).join("");
+  svg += `<polyline fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${data.map((d, i) => `${x(i)},${y(d.share)}`).join(" ")}"/>`;
+  const last = data[data.length - 1];
+  svg += `<circle cx="${x(data.length - 1)}" cy="${y(last.share)}" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>`;
+  svg += `<line id="xh" y1="${m.t}" y2="${H - m.b}" stroke="var(--text-muted)" stroke-dasharray="3 3" style="display:none"/><circle id="xd" r="5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2" style="display:none"/>`;
+  svg += `<rect x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent" id="hit"/></svg>`;
+  el.innerHTML = svg + `<div class="legend">Latest: <b style="color:var(--text-primary)">${last.share}%</b> on ${fmtDate(last.date)} (${last.champ} of ${last.all} tables on average)</div>`;
+  const s = el.querySelector("svg"), hit = el.querySelector("#hit"), xh = el.querySelector("#xh"), xd = el.querySelector("#xd");
+  const move = (e) => {
+    const pt = s.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const p = pt.matrixTransform(s.getScreenCTM().inverse());
+    const i = Math.max(0, Math.min(data.length - 1, Math.round(((p.x - m.l) / (W - m.l - m.r)) * (data.length - 1))));
+    const d = data[i];
+    xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.style.display = "";
+    xd.setAttribute("cx", x(i)); xd.setAttribute("cy", y(d.share)); xd.style.display = "";
+    showTip(e, `<b>${fmtDate(d.date)}</b><br>${d.share}% share<br>${d.champ} of ${d.all} tables on average`);
+  };
+  hit.addEventListener("mousemove", move); hit.addEventListener("click", move);
+  hit.addEventListener("mouseleave", () => { hideTip(); xh.style.display = "none"; xd.style.display = "none"; });
+}
+
+function renderRank() {
+  const el = $("rank");
+  const rows = summary && summary.ranking_7d ? summary.ranking_7d.filter((r) => r.avg_tables > 0 || r.room === summary.highlight) : [];
+  if (!rows.length) { el.innerHTML = `<div class="empty">Fills in after the first readings.</div>`; return; }
+  const max = Math.max(...rows.map((r) => r.avg_tables), 1);
+  const rowH = 24, W = 540, labelW = 205, H = rows.length * rowH + 6;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Average tables per room, last 7 days">`;
+  rows.forEach((r, i) => {
+    const isHl = r.room === summary.highlight;
+    const w = Math.max(2, (r.avg_tables / max) * (W - labelW - 50));
+    const yy = i * rowH + 4;
+    svg += `<text x="${labelW - 8}" y="${yy + 13}" text-anchor="end" style="fill:var(--text-${isHl ? "primary" : "secondary"});font-weight:${isHl ? 650 : 400};font-size:12px">${esc(r.room)}</text>`;
+    svg += `<rect class="bar" data-i="${i}" x="${labelW}" y="${yy + 2}" width="${w}" height="${rowH - 9}" rx="3" fill="var(--series-${isHl ? 2 : 1})"/>`;
+    svg += `<text x="${labelW + w + 6}" y="${yy + 13}" style="font-size:12px;fill:var(--text-secondary)">${r.avg_tables}</text>`;
+  });
+  svg += `</svg>`;
+  el.innerHTML = svg + `<div class="legend"><span><span class="sw" style="background:var(--series-2)"></span>${esc(summary.highlight)}</span><span><span class="sw" style="background:var(--series-1)"></span>Other rooms</span></div>`;
+  el.querySelectorAll(".bar").forEach((b) => {
+    const r = rows[b.dataset.i];
+    const f = (e) => showTip(e, `<b>${esc(r.room)}</b><br>${r.avg_tables} tables on average<br>${r.avg_waiting} waiting on average<br>Peak: ${r.peak_tables} tables`);
+    b.addEventListener("mousemove", f); b.addEventListener("click", f); b.addEventListener("mouseleave", hideTip);
+  });
+}
+
+function renderDownloads() {
+  const el = $("downloads");
+  const months = summary && summary.months ? [...summary.months].reverse() : [];
+  if (!months.length) { el.innerHTML = `<span class="sub">Available after the first reading.</span>`; return; }
+  const nice = (m) => new Date(m + "-15T12:00:00").toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  el.innerHTML = months.map((m) => `<div><b>${nice(m)}:</b> <a href="data/history/${m}.csv" download>Every game</a><a href="data/totals/${m}.csv" download>Room totals</a></div>`).join("");
+}
+
+load();
+setInterval(load, 5 * 60 * 1000);
+</script>
+</body>
+</html>
