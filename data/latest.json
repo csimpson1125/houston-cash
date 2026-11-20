@@ -1,0 +1,8 @@
+{
+ "rooms": [],
+ "ok": false,
+ "error": "Couldn't reach PokerAtlas to sign in (HTTPError).",
+ "last_attempt_local": "Nov 20, 1:14 PM CT",
+ "last_attempt_utc": "2026-11-20T19:14:51+00:00",
+ "fail_streak": 1
+}
