@@ -1,0 +1,19 @@
+{
+  "_help": "Settings for the Houston cash tracker. Edit on GitHub (pencil icon) and commit; the next run uses them.",
+
+  "highlight_room": "champions-club-houston",
+
+  "areas": ["Houston", "Katy", "Cypress", "Webster", "Spring"],
+
+  "_exclude_help": "Rooms PokerAtlas files under a Houston area that aren't really in Houston. Any room whose web address (slug) contains one of these words is skipped.",
+  "exclude_slug_words": ["college-station", "bryan", "navasota"],
+
+  "_extra_help": "Rooms to always include even if PokerAtlas doesn't list them under a Houston area. Find the vid by opening the room on PokerAtlas and clicking 'View Live Info' - the number at the end of the web address.",
+  "extra_rooms": [],
+
+  "_stale_help": "If a room hasn't updated PokerAtlas in this many minutes, its tables are shown but not counted in totals or charts.",
+  "stale_after_minutes": 360,
+
+  "seconds_between_rooms": 1.5,
+  "history_days_for_charts": 56
+}
